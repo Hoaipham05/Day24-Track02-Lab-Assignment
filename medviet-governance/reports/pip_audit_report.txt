@@ -1,0 +1,12 @@
+﻿d:/AI_THUCCHIEN/assignments-main/Day24-Track02-Lab-Assignment/.venv/Scripts/pyt
+hon.exe : No known vulnerabilities found
+At line:1 char:1
++ d:/AI_THUCCHIEN/assignments-main/Day24-Track02-Lab-Assignment/.venv/S ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No known vulnerabilities found:St 
+   ring) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Name           Skip Reason
+-------------- -----------------------------------------------------------------------------
+en-core-web-lg Dependency not found on PyPI and could not be audited: en-core-web-lg (3.8.0)

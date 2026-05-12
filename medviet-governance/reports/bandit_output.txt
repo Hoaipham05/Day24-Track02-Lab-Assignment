@@ -1,0 +1,13 @@
+﻿d:/AI_THUCCHIEN/assignments-main/Day24-Track02-Lab-Assignment/.venv/Scripts/pyt
+hon.exe : [main]	INFO	profile include tests: None
+At line:1 char:1
++ d:/AI_THUCCHIEN/assignments-main/Day24-Track02-Lab-Assignment/.venv/S ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([main]	INFO	profile include tests 
+   : None:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[json]	INFO	JSON output written to file: reports/bandit_report.json

@@ -20,20 +20,20 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
     Raise HTTPException 401 nếu token không hợp lệ.
     """
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=___, detail="Missing token")
+        raise HTTPException(status_code=401, detail="Missing token")
 
     token = authorization.split(" ")[1]
     user = MOCK_USERS.get(token)
 
     if not user:
-        raise HTTPException(status_code=___, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     return user
 
 def require_permission(resource: str, action: str):
     """
     TODO: Decorator kiểm tra RBAC permission.
-    Dùng casbin enforcer để check (role, resource, action).
+    Dùng casbin enforcer để check (username, resource, action).
     Raise HTTPException 403 nếu không có quyền.
     """
     def decorator(func):
@@ -41,14 +41,16 @@ def require_permission(resource: str, action: str):
         async def wrapper(*args, **kwargs):
             # Lấy current_user từ kwargs (FastAPI inject qua Depends)
             current_user = kwargs.get("current_user")
-            role = current_user["role"]
+            if not current_user:
+                raise HTTPException(status_code=401, detail="Missing user context")
+            username = current_user["username"]
 
-            allowed = enforcer.enforce(___, ___, ___)  # TODO
+            allowed = enforcer.enforce(username, resource, action)
 
             if not allowed:
                 raise HTTPException(
-                    status_code=___,    # TODO: HTTP status code
-                    detail=f"Role '{role}' cannot '{action}' on '{resource}'"
+                    status_code=403,
+                    detail=f"User '{username}' cannot '{action}' on '{resource}'"
                 )
             return await func(*args, **kwargs)
         return wrapper

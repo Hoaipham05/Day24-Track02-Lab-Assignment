@@ -1,7 +1,7 @@
 # src/pii/anonymizer.py
+import hashlib
+
 import pandas as pd
-from presidio_anonymizer import AnonymizerEngine
-from presidio_anonymizer.entities import OperatorConfig
 from faker import Faker
 from .detector import build_vietnamese_analyzer, detect_pii
 
@@ -11,7 +11,6 @@ class MedVietAnonymizer:
 
     def __init__(self):
         self.analyzer = build_vietnamese_analyzer()
-        self.anonymizer = AnonymizerEngine()
 
     def anonymize_text(self, text: str, strategy: str = "replace") -> str:
         """
@@ -27,33 +26,38 @@ class MedVietAnonymizer:
         if not results:
             return text
 
-        # TODO: implement operators dict dựa trên strategy
-        operators = {}
+        def fake_cccd() -> str:
+            return "".join(str(fake.random_digit()) for _ in range(12))
+
+        def fake_phone() -> str:
+            return f"0{fake.random_element(elements=('3', '5', '7', '8', '9'))}{''.join(str(fake.random_digit()) for _ in range(8))}"
+
+        def apply_manual_replacements(replacement_fn) -> str:
+            output = text
+            for result in sorted(results, key=lambda item: item.start, reverse=True):
+                output = output[:result.start] + replacement_fn(result, output[result.start:result.end]) + output[result.end:]
+            return output
 
         if strategy == "replace":
-            operators = {
-                "PERSON": OperatorConfig("replace", 
-                          {"new_value": fake.name()}),
-                "EMAIL_ADDRESS": OperatorConfig("replace", 
-                                 {"new_value": ___}),   # TODO: fake email
-                "VN_CCCD": OperatorConfig("replace", 
-                           {"new_value": ___}),          # TODO: fake CCCD
-                "VN_PHONE": OperatorConfig("replace", 
-                            {"new_value": ___}),         # TODO: fake phone
+            replacement_map = {
+                "PERSON": fake.name(),
+                "EMAIL_ADDRESS": fake.email(),
+                "VN_CCCD": fake_cccd(),
+                "VN_PHONE": fake_phone(),
             }
+            return apply_manual_replacements(
+                lambda result, value: replacement_map.get(result.entity_type, value)
+            )
         elif strategy == "mask":
-            # TODO: implement masking
-            pass
+            return apply_manual_replacements(
+                lambda result, value: value[0] + "*" * max(len(value) - 1, 1)
+            )
         elif strategy == "hash":
-            # TODO: implement hashing dùng sha256
-            pass
+            return apply_manual_replacements(
+                lambda result, value: hashlib.sha256(value.encode("utf-8")).hexdigest()
+            )
 
-        anonymized = self.anonymizer.anonymize(
-            text=text,
-            analyzer_results=results,
-            operators=operators
-        )
-        return anonymized.text
+        return text
 
     def anonymize_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -65,8 +69,15 @@ class MedVietAnonymizer:
         """
         df_anon = df.copy()
 
-        # TODO: Xử lý từng cột PII
-        # Gợi ý: dùng df.apply() hoặc list comprehension
+        for column in ["ho_ten", "dia_chi", "email", "bac_si_phu_trach", "ngay_sinh", "ngay_kham"]:
+            if column in df_anon.columns:
+                df_anon[column] = df_anon[column].astype(str).apply(lambda value: self.anonymize_text(value, strategy="replace"))
+
+        if "cccd" in df_anon.columns:
+            df_anon["cccd"] = ["".join(str(fake.random_digit()) for _ in range(12)) for _ in range(len(df_anon))]
+
+        if "so_dien_thoai" in df_anon.columns:
+            df_anon["so_dien_thoai"] = [f"0{fake.random_element(elements=('3', '5', '7', '8', '9'))}{''.join(str(fake.random_digit()) for _ in range(8))}" for _ in range(len(df_anon))]
 
         return df_anon
 
